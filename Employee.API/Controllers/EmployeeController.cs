@@ -19,11 +19,15 @@ namespace Employee.API.Controllers
             _employeeDAO = employeeDAO;
         }
 
-        [HttpPost("Create")]
-	    public async Task<IActionResult> CreateAccount(DataAccess.Model.Employee employee){
+        [HttpPost()]
+        public async Task<IActionResult> Create(DataAccess.Model.Employee employee)
+        {
+            if (employee == null)
+                return BadRequest("Employee not passed");
+
             var createdEmployee = await _employeeDAO.CreateEmployee(employee);
 
-            if(createdEmployee != null)
+            if (createdEmployee != null)
             {
                 return new CreatedAtActionResult("GetEmployee", "Employee", new { createdEmployee.id }, createdEmployee);
             }
@@ -31,14 +35,17 @@ namespace Employee.API.Controllers
             {
                 return BadRequest("Error occured please try again.");
             }
-	    }
+        }
 
-        [HttpGet("Get/{id}")]
-        public async Task<IActionResult> GetEmployee(Guid? id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid? id)
         {
+            if (id == null || id.Value == Guid.Empty)
+                return BadRequest("Id must not be empty");
+
             var employee = await _employeeDAO.GetEmployeeById(id);
 
-            if(employee == null)
+            if (employee == null)
             {
                 return NotFound($"Employee with Id {id} doesn't exit");
             }
@@ -47,8 +54,6 @@ namespace Employee.API.Controllers
         }
 
         [HttpGet]
-        [Route("")]
-        [Route("GetAll")]
         public IActionResult GetAll()
         {
             var allEmployee = _employeeDAO.GetAll();
@@ -57,19 +62,20 @@ namespace Employee.API.Controllers
                 return Ok(allEmployee);
 
             return NotFound("No employee exit yet.");
-      
         }
 
-        [HttpPost]
-        [Route("Update")]
+        [HttpPut]
         public async Task<IActionResult> Update(DataAccess.Model.Employee employee)
         {
+            if (employee == null)
+                return BadRequest("Employee not passed");
+
             var updatedEmployee = await _employeeDAO.UpdateEmployee(employee);
 
             if (updatedEmployee == null)
-                return BadRequest("Error occured please try again.");
+                return BadRequest("Error occured please check the input data and try again.");
 
-            return new CreatedAtActionResult("GetEmployee", "Employee", new { updatedEmployee.id }, updatedEmployee);            
+            return Ok(updatedEmployee);
         }
     }
 }
